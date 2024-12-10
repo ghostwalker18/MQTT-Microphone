@@ -29,11 +29,12 @@ import javax.inject.Inject
 /**
  * Этот класс представляет собой основной экран приложения.
  *
- * @author  Ипатов Никита
+ * @author Ipatov Nikita
  * @since 1.0
  */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityMainBinding
     private var notStarted = false
     @Inject lateinit var recorder: VoiceRecorder
@@ -48,9 +49,9 @@ class MainActivity : AppCompatActivity() {
         when(prefs.getString("record_mode", "hold")){
             "hold" -> {
                 binding.mic.setOnTouchListener { _, motionEvent ->
-                    when(motionEvent.action){
-                        MotionEvent.ACTION_DOWN -> startRecord()
-                        MotionEvent.ACTION_UP -> sendRecord()
+                    when(motionEvent.action) {
+                        MotionEvent.ACTION_DOWN -> recorder.startRecord()
+                        MotionEvent.ACTION_UP -> recorder.sendRecord()
                     }
                     true
                 }
@@ -58,16 +59,14 @@ class MainActivity : AppCompatActivity() {
             "tap" -> {
                 binding.mic.setOnClickListener {
                     if(notStarted){
-                        startRecord()
+                        recorder.startRecord()
                         notStarted = !notStarted
                     } else {
-                        sendRecord()
+                        recorder.sendRecord()
                     }
                 }
             }
-
         }
-        binding.mic.setOnClickListener { sendRecord() }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -84,13 +83,5 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    private fun startRecord() {
-
-    }
-
-    private fun sendRecord(){
-
     }
 }

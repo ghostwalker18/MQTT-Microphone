@@ -16,14 +16,27 @@ package com.ghostwalker18.mqttmicrophone
 
 import javax.inject.Inject
 
-class VoiceRecorder @Inject constructor(val service: MQTTService){
-    private lateinit var record: ByteArray
+/**
+ * Этот класс используется для записи и отпраки звука на сервер.
+ *
+ * @author Ipatov Nikita
+ * @since 1.0
+ */
+class VoiceRecorder @Inject constructor(val service: MQTTService) {
 
+    private var record: ByteArray = ByteArray(4)
+
+    /**
+     * Этот метод используется для начала записи звука.
+     */
     fun startRecord(){
 
     }
 
+    /**
+     * Этот метод используется для окончания записи звука и отправки данных на сервер.
+     */
     fun sendRecord(){
-
+        service.send(record)
     }
 }

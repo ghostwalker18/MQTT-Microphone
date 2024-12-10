@@ -22,10 +22,11 @@ import com.ghostwalker18.mqttmicrophone.databinding.ActivitySettingsBinding
 /**
  * Этот класс представляет собой экран настроек приложения
  *
- * @author  Ипатов Никита
+ * @author Ipatov Nikita
  * @since 1.0
  */
 class SettingsActivity : AppCompatActivity(){
+
     private lateinit var binding : ActivitySettingsBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {

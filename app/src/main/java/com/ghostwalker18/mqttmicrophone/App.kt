@@ -28,11 +28,13 @@ import javax.inject.Inject
  *      Программа представляет собой мобильный микрофон для отправки голосовых записей на MQTT сервер.
  * </p>
  *
- * @author  Ипатов Никита
- * @version  1.0
+ * @author Ipatov Nikita
+ * @since 1.0
  */
 @HiltAndroidApp
-class App: Application(), SharedPreferences.OnSharedPreferenceChangeListener {
+class App : Application(),
+    SharedPreferences.OnSharedPreferenceChangeListener {
+
     @Inject lateinit var preferences: SharedPreferences
 
     override fun onCreate() {
@@ -41,6 +43,7 @@ class App: Application(), SharedPreferences.OnSharedPreferenceChangeListener {
         setTheme(theme)
         preferences.registerOnSharedPreferenceChangeListener(this)
     }
+
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         when(key){
             "theme" -> {
@@ -65,6 +68,7 @@ class App: Application(), SharedPreferences.OnSharedPreferenceChangeListener {
             LocaleListCompat.create(localeCode?.let { Locale(it) })
         AppCompatDelegate.setApplicationLocales(localeListCompat)
     }
+
     /**
      * Этот метод позволяет установить тему приложения
      * @param theme код темы (system, day, night)

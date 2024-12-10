@@ -23,10 +23,19 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 
+/**
+ * Этот класс используется для поставки системных зависимостей.
+ *
+ * @author Ipatov Nikita
+ * @since 1.0
+ */
 @Module
 @InstallIn(SingletonComponent::class)
-class UtilsModule{
+class UtilsModule {
 
+    /**
+     * Этот метод поставляет компонентам SharedPreferences приложения.
+     */
     @Provides
     fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences{
         return PreferenceManager.getDefaultSharedPreferences(context)
