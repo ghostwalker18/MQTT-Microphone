@@ -16,8 +16,12 @@ package com.ghostwalker18.mqttmicrophone
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.eclipse.paho.android.service.MqttAndroidClient
+import org.eclipse.paho.client.mqttv3.IMqttActionListener
+import org.eclipse.paho.client.mqttv3.IMqttToken
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import javax.inject.Inject
@@ -37,9 +41,11 @@ class MQTTService @Inject constructor(val prefs: SharedPreferences,
     private var clientID = prefs.getString("client_id", "")
     private var topic = prefs.getString("topic_name", "")
     private var mqttClient = MqttAndroidClient(context, serverID, clientID)
+    val connectionStatus = MutableLiveData(context.getString(R.string.connection_status_not_connected))
 
     init {
         prefs.registerOnSharedPreferenceChangeListener(this)
+        connect()
     }
 
     /**
@@ -50,11 +56,13 @@ class MQTTService @Inject constructor(val prefs: SharedPreferences,
      */
     @Throws(MqttException::class)
     fun send(payload: ByteArray){
-        val message = MqttMessage()
-        message.payload = payload
-        message.qos = 2
-        message.isRetained = false
-        mqttClient.publish(topic, message)
+        if(connectionStatus.value == context.getString(R.string.connection_status_connected)){
+            val message = MqttMessage()
+            message.payload = payload
+            message.qos = 2
+            message.isRetained = false
+            mqttClient.publish(topic, message)
+        }
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
@@ -73,5 +81,22 @@ class MQTTService @Inject constructor(val prefs: SharedPreferences,
             }
             else -> mqttClient
         }
+        connect()
+    }
+
+    /**
+     * Этот метод используется для установления связи с MQTT сервером.
+     */
+    private fun connect(){
+        connectionStatus.postValue(context.getString(R.string.connection_status_connection))
+        mqttClient.connect(context, object: IMqttActionListener{
+            override fun onSuccess(asyncActionToken: IMqttToken?) {
+                connectionStatus.postValue(context.getString(R.string.connection_status_connected))
+            }
+
+            override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
+                connectionStatus.postValue(context.getString(R.string.connection_status_failed))
+            }
+        })
     }
 }

@@ -21,4 +21,9 @@
     <string name="record_mode_option">Voice record mode</string>
     <string name="language_option">Language</string>
     <string name="theme_option">Theme</string>
+    <string name="permission_for_audio_record">Audio recording permission is required</string>
+    <string name="connection_status_not_connected">Not connected</string>
+    <string name="connection_status_connection">Connection in progress</string>
+    <string name="connection_status_connected">Connected</string>
+    <string name="connection_status_failed">Connection failed</string>
 </resources>

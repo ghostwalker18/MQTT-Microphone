@@ -14,7 +14,18 @@
 
 package com.ghostwalker18.mqttmicrophone
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
+import android.media.MediaRecorder
+import android.media.MediaRecorder.AudioSource
+import android.os.Build
+import androidx.core.content.ContextCompat
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.ByteArrayOutputStream
+import java.io.File
 import javax.inject.Inject
+
 
 /**
  * Этот класс используется для записи и отпраки звука на сервер.
@@ -22,21 +33,40 @@ import javax.inject.Inject
  * @author Ipatov Nikita
  * @since 1.0
  */
-class VoiceRecorder @Inject constructor(val service: MQTTService) {
+class VoiceRecorder @Inject constructor(val service: MQTTService, @ApplicationContext val context: Context) {
 
-    private var record: ByteArray = ByteArray(4)
+    private var recorder: MediaRecorder? = null
+    private val fileName = context.cacheDir.absolutePath + "/record.3gp"
 
     /**
      * Этот метод используется для начала записи звука.
      */
     fun startRecord(){
-
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED){
+            recorder = if (Build.VERSION.SDK_INT < 31) MediaRecorder() else MediaRecorder(context)
+            val outputFile = File(fileName)
+            if (outputFile.exists())
+                outputFile.delete()
+            recorder?.apply {
+                setAudioSource(AudioSource.MIC)
+                setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+                setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB)
+                setOutputFile(outputFile)
+                prepare()
+                start()
+            }
+        }
     }
 
     /**
      * Этот метод используется для окончания записи звука и отправки данных на сервер.
      */
-    fun sendRecord(){
+     fun sendRecord(){
+        recorder?.stop()
+        recorder?.release()
+        val outputFile = File(fileName)
+        val record = outputFile.readBytes()
         service.send(record)
     }
 }

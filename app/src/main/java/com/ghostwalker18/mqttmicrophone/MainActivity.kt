@@ -14,6 +14,7 @@
 
 package com.ghostwalker18.mqttmicrophone
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.SharedPreferences
@@ -22,6 +23,8 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import com.ghostwalker18.mqttmicrophone.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -36,9 +39,16 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private var notStarted = false
+    private var notStarted = true
     @Inject lateinit var recorder: VoiceRecorder
+    @Inject lateinit var mqttService: MQTTService
     @Inject lateinit var prefs: SharedPreferences
+
+    private val audioPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()) { granted ->
+        if (!granted)
+            finish()
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,6 +56,14 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar)
+        if (shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
+            val toast = Toast.makeText(this,
+                resources.getText(R.string.permission_for_audio_record), Toast.LENGTH_SHORT
+            )
+            toast.show()
+        } else {
+            audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+        }
         when(prefs.getString("record_mode", "hold")){
             "hold" -> {
                 binding.mic.setOnTouchListener { _, motionEvent ->
@@ -66,6 +84,9 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+        mqttService.connectionStatus.observe(this){
+            status -> binding.connectionStatus.text = status
         }
     }
 
