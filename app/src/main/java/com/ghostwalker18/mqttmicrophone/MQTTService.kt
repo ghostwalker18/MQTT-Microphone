@@ -16,7 +16,6 @@ package com.ghostwalker18.mqttmicrophone
 
 import android.content.Context
 import android.content.SharedPreferences
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import dagger.hilt.android.qualifiers.ApplicationContext
 import org.eclipse.paho.android.service.MqttAndroidClient

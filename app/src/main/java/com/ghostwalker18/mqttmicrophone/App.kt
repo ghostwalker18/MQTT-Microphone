@@ -39,7 +39,7 @@ class App : Application(),
 
     override fun onCreate() {
         super.onCreate()
-        val theme = preferences.getString("theme", "")
+        val theme = preferences.getString("theme", "system")
         setTheme(theme)
         preferences.registerOnSharedPreferenceChangeListener(this)
     }

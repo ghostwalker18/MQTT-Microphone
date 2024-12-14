@@ -22,6 +22,7 @@
     <string name="record_mode_option">Режим записи</string>
     <string name="language_option">Язык</string>
     <string name="theme_option">Тема</string>
+    <string name="speaking">Говорите</string>
     <string name="permission_for_audio_record">Требуется разрешение на запись аудио</string>
     <string name="connection_status_not_connected">Нет подключение</string>
     <string name="connection_status_connection">В процессе подключения</string>

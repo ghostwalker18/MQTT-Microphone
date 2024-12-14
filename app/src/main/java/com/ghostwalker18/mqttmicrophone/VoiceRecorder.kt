@@ -22,7 +22,6 @@ import android.media.MediaRecorder.AudioSource
 import android.os.Build
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.io.ByteArrayOutputStream
 import java.io.File
 import javax.inject.Inject
 
@@ -66,7 +65,7 @@ class VoiceRecorder @Inject constructor(val service: MQTTService, @ApplicationCo
         recorder?.stop()
         recorder?.release()
         val outputFile = File(fileName)
-        val record = outputFile.readBytes()
-        service.send(record)
+        service.send(outputFile.readBytes())
+        outputFile.delete()
     }
 }

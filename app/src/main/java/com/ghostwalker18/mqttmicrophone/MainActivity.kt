@@ -23,6 +23,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.MotionEvent
+import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import com.ghostwalker18.mqttmicrophone.databinding.ActivityMainBinding
@@ -68,20 +69,27 @@ class MainActivity : AppCompatActivity() {
             "hold" -> {
                 binding.mic.setOnTouchListener { _, motionEvent ->
                     when(motionEvent.action) {
-                        MotionEvent.ACTION_DOWN -> recorder.startRecord()
-                        MotionEvent.ACTION_UP -> recorder.sendRecord()
+                        MotionEvent.ACTION_DOWN -> {
+                            binding.speaking.visibility = View.VISIBLE
+                            recorder.startRecord()
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            binding.speaking.visibility = View.GONE
+                            recorder.sendRecord()
+                        }
                     }
                     true
                 }
             }
             "tap" -> {
                 binding.mic.setOnClickListener {
+                    binding.speaking.visibility = if (notStarted) View.VISIBLE else View.GONE
                     if(notStarted){
                         recorder.startRecord()
-                        notStarted = !notStarted
                     } else {
                         recorder.sendRecord()
                     }
+                    notStarted = !notStarted
                 }
             }
         }
@@ -96,13 +104,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        when(item.itemId){
+        return when(item.itemId){
             R.id.action_settings -> {
-                val intent = Intent(this, SettingsActivity::class.java)
-                startActivity(intent)
-                return true
+                startActivity(Intent(this, SettingsActivity::class.java))
+                true
             }
+            else ->  super.onOptionsItemSelected(item)
         }
-        return super.onOptionsItemSelected(item)
     }
 }
