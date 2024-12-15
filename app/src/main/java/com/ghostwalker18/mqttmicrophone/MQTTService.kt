@@ -37,7 +37,9 @@ class MQTTService @Inject constructor(val prefs: SharedPreferences,
     SharedPreferences.OnSharedPreferenceChangeListener {
 
     private var serverID = prefs.getString("server_address", "0.0.0.0")
-    private var clientID = prefs.getString("client_id", "")
+    private var serverPort = prefs.getInt("port", 1883)
+    private var clientID = prefs.getString("username", "")
+    private var password = prefs.getString("password", "")
     private var topic = prefs.getString("topic_name", "")
     private var mqttClient = MqttAndroidClient(context, serverID, clientID)
     val connectionStatus = MutableLiveData(context.getString(R.string.connection_status_not_connected))
@@ -70,8 +72,16 @@ class MQTTService @Inject constructor(val prefs: SharedPreferences,
                 serverID = prefs.getString("server_address", "0.0.0.0")
                 MqttAndroidClient(context, serverID, clientID)
             }
-            "client_id" -> {
+            "port" -> {
+                serverPort = prefs.getInt("port", 1883)
+                MqttAndroidClient(context, serverID, clientID)
+            }
+            "username" -> {
                 clientID = prefs.getString("client_id", "")
+                MqttAndroidClient(context, serverID, clientID)
+            }
+            "password" -> {
+                password = prefs.getString("password", "")
                 MqttAndroidClient(context, serverID, clientID)
             }
             "topic_name" -> {

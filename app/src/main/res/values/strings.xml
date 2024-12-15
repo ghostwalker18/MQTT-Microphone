@@ -17,6 +17,9 @@
     <string name="settings">Настройки</string>
     <string name="mqtt_settings" translatable="false">MQTT</string>
     <string name="server_address_option">Адрес сервера</string>
+    <string name="port_option">Порт для подключения</string>
+    <string name="username_option">Имя пользователя</string>
+    <string name="password_option">Пароль</string>
     <string name="topic_name_option">Топик для отправки записи</string>
     <string name="app_settings">Приложение</string>
     <string name="record_mode_option">Режим записи</string>

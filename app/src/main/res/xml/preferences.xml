@@ -13,6 +13,7 @@
   ~ limitations under the License.
   -->
 <PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory
@@ -21,6 +22,20 @@
         <EditTextPreference
             app:title="@string/server_address_option"
             app:key="server_address"/>
+
+        <EditTextPreference
+            app:title="@string/port_option"
+            app:key="port"
+            android:inputType="number" />
+
+
+        <EditTextPreference
+            app:title="@string/username_option"
+            app:key="username"/>
+
+        <EditTextPreference
+            app:title="@string/password_option"
+            app:key="password"/>
 
         <EditTextPreference
             app:title="@string/topic_name_option"
