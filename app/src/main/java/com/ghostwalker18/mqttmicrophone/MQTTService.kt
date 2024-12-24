@@ -17,14 +17,11 @@ package com.ghostwalker18.mqttmicrophone
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.lifecycle.MutableLiveData
+import com.hivemq.client.mqtt.datatypes.MqttQos
+import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
+import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
 import dagger.hilt.android.qualifiers.ApplicationContext
-import org.eclipse.paho.android.service.MqttAndroidClient
-import org.eclipse.paho.client.mqttv3.IMqttActionListener
-import org.eclipse.paho.client.mqttv3.IMqttToken
-import org.eclipse.paho.client.mqttv3.MqttException
-import org.eclipse.paho.client.mqttv3.MqttMessage
 import javax.inject.Inject
-import kotlin.jvm.Throws
 
 /**
  * Этот класс используется для предоставления приложению доступа к MQTT
@@ -36,12 +33,12 @@ class MQTTService @Inject constructor(val prefs: SharedPreferences,
                                       @ApplicationContext val context: Context) :
     SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private var serverID = prefs.getString("server_address", "0.0.0.0")
-    private var serverPort = prefs.getInt("port", 1883)
-    private var clientID = prefs.getString("username", "")
-    private var password = prefs.getString("password", "")
-    private var topic = prefs.getString("topic_name", "")
-    private var mqttClient = MqttAndroidClient(context, serverID, clientID)
+    private var serverID = prefs.getString("server_address", "0.0.0.0") ?: "0.0.0.0"
+    private var serverPort = prefs.getString("port", "1883")?.toInt() ?: 1883
+    private var clientID = prefs.getString("username", "") ?: ""
+    private var password = prefs.getString("password", "") ?: ""
+    private var topic = prefs.getString("topic_name", "") ?: ""
+    private var mqttClient = buildClient()
     val connectionStatus = MutableLiveData(context.getString(R.string.connection_status_not_connected))
 
     init {
@@ -55,37 +52,36 @@ class MQTTService @Inject constructor(val prefs: SharedPreferences,
      *
      * @param payload данные в бинарном формате
      */
-    @Throws(MqttException::class)
     fun send(payload: ByteArray){
         if(connectionStatus.value == context.getString(R.string.connection_status_connected)){
-            val message = MqttMessage()
-            message.payload = payload
-            message.qos = 2
-            message.isRetained = false
-            mqttClient.publish(topic, message)
+            mqttClient.publishWith()
+                .topic(topic)
+                .payload(payload)
+                .qos(MqttQos.AT_LEAST_ONCE)
+                .send()
         }
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
         mqttClient = when(key){
             "server_address" -> {
-                serverID = prefs.getString("server_address", "0.0.0.0")
-                MqttAndroidClient(context, serverID, clientID)
+                serverID = "mqtt://" + prefs.getString("server_address", "0.0.0.0")
+                buildClient()
             }
             "port" -> {
-                serverPort = prefs.getInt("port", 1883)
-                MqttAndroidClient(context, serverID, clientID)
+                serverPort = prefs.getString("port", "1883")?.toInt() ?: 1883
+                buildClient()
             }
             "username" -> {
-                clientID = prefs.getString("client_id", "")
-                MqttAndroidClient(context, serverID, clientID)
+                clientID = prefs.getString("username", "") ?: ""
+                buildClient()
             }
             "password" -> {
-                password = prefs.getString("password", "")
-                MqttAndroidClient(context, serverID, clientID)
+                password = prefs.getString("password", "") ?: ""
+                buildClient()
             }
             "topic_name" -> {
-                topic = prefs.getString("topic_name", "")
+                topic = prefs.getString("topic_name", "") ?: ""
                 mqttClient
             }
             else -> mqttClient
@@ -98,14 +94,17 @@ class MQTTService @Inject constructor(val prefs: SharedPreferences,
      */
     private fun connect(){
         connectionStatus.postValue(context.getString(R.string.connection_status_connection))
-        mqttClient.connect(context, object: IMqttActionListener{
-            override fun onSuccess(asyncActionToken: IMqttToken?) {
-                connectionStatus.postValue(context.getString(R.string.connection_status_connected))
-            }
+        mqttClient.connect().thenAccept {  }
+    }
 
-            override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                connectionStatus.postValue(context.getString(R.string.connection_status_failed))
-            }
-        })
+    private fun buildClient(): Mqtt5AsyncClient{
+        return Mqtt5Client.builder()
+            .serverHost(serverID)
+            .serverPort(serverPort)
+            .simpleAuth()
+            .username(clientID)
+            .password(password.toByteArray())
+            .applySimpleAuth()
+            .buildAsync()
     }
 }

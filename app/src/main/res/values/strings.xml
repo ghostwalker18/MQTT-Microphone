@@ -30,5 +30,5 @@
     <string name="connection_status_not_connected">Нет подключение</string>
     <string name="connection_status_connection">В процессе подключения</string>
     <string name="connection_status_connected">Подключено</string>
-    <string name="connection_status_failed">Connection failed</string>
+    <string name="connection_status_failed">Сбой при подключении</string>
 </resources>
