@@ -25,13 +25,16 @@ import javax.inject.Inject
 
 /**
  * Этот класс используется для предоставления приложению доступа к MQTT
+ * @property prefs настройки приложения
+ * @property context контекст приложения
  *
  * @author Ipatov Nikita
  * @since 1.0
  */
-class MQTTService @Inject constructor(val prefs: SharedPreferences,
-                                      @ApplicationContext val context: Context) :
-    SharedPreferences.OnSharedPreferenceChangeListener {
+class MQTTService @Inject constructor(
+    val prefs: SharedPreferences,
+    @ApplicationContext val context: Context
+) : SharedPreferences.OnSharedPreferenceChangeListener {
 
     private var serverID = prefs.getString("server_address", "0.0.0.0") ?: "0.0.0.0"
     private var serverPort = prefs.getString("port", "1883")?.toInt() ?: 1883

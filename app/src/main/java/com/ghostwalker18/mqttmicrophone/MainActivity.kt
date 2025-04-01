@@ -32,9 +32,9 @@ import javax.inject.Inject
 
 /**
  * Этот класс представляет собой основной экран приложения.
+ * * @author Ipatov Nikita
+ *  * @since 1.0
  *
- * @author Ipatov Nikita
- * @since 1.0
  */
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {

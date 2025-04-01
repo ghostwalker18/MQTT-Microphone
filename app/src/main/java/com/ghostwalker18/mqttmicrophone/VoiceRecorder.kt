@@ -28,11 +28,16 @@ import javax.inject.Inject
 
 /**
  * Этот класс используется для записи и отпраки звука на сервер.
+ * @property service транспортный сервис
+ * @property context контекст приложения
  *
  * @author Ipatov Nikita
  * @since 1.0
  */
-class VoiceRecorder @Inject constructor(val service: MQTTService, @ApplicationContext val context: Context) {
+class VoiceRecorder @Inject constructor(
+    val service: MQTTService,
+    @ApplicationContext val context: Context
+) {
 
     private var recorder: MediaRecorder? = null
     private val fileName = context.cacheDir.absolutePath + "/record.3gp"
