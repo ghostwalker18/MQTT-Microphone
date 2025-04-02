@@ -23,12 +23,15 @@ import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
 import com.hivemq.client.mqtt.mqtt5.message.connect.connack.Mqtt5ConnAckReasonCode
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.util.UUID
 import javax.inject.Inject
 
 /**
  * Этот класс используется для предоставления приложению доступа к MQTT
  * @property prefs настройки приложения
  * @property context контекст приложения
+ * @property connectionStatus статус соединения с брокером
+ * @property dynamic принимаемая аудиозапись
  *
  * @author Ipatov Nikita
  * @since 1.0
@@ -42,9 +45,11 @@ class MQTTService @Inject constructor(
     private var serverPort = prefs.getString("port", "1883")?.toInt() ?: 1883
     private var clientID = prefs.getString("username", "") ?: ""
     private var password = prefs.getString("password", "") ?: ""
-    private var topic = prefs.getString("topic_name", "") ?: ""
+    private var micTopic = prefs.getString("mic_topic_name", "") ?: ""
+    private var dynTopic = prefs.getString("dyn_topic_name", "") ?: ""
     private var mqttClient = buildClient()
     val connectionStatus = MutableLiveData(context.getString(R.string.connection_status_not_connected))
+    val dynamic = MutableLiveData<ByteArray>()
 
     init {
         prefs.registerOnSharedPreferenceChangeListener(this)
@@ -52,7 +57,7 @@ class MQTTService @Inject constructor(
     }
 
     /**
-     * Этот метод используется для отправки сообщения на сервер.
+     * Этот метод используется для отправки аудиозаписи на сервер.
      * Данные сервера хранятся в SharedPreferences.
      *
      * @param payload данные в бинарном формате
@@ -60,11 +65,21 @@ class MQTTService @Inject constructor(
     fun send(payload: ByteArray){
         if(connectionStatus.value == context.getString(R.string.connection_status_connected)){
             mqttClient.publishWith()
-                .topic(topic)
+                .topic(micTopic)
                 .payload(payload)
-                .qos(MqttQos.AT_LEAST_ONCE)
+                .qos(MqttQos.EXACTLY_ONCE)
                 .send()
         }
+    }
+
+    /**
+     * Этот метод должен вызываться при заверешении работы с сервисом.
+     */
+    fun shutDown(){
+        mqttClient.unsubscribeWith()
+            .topicFilter(dynTopic)
+            .send()
+        mqttClient.disconnect()
     }
 
     override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
@@ -85,10 +100,16 @@ class MQTTService @Inject constructor(
                 password = prefs.getString("password", "") ?: ""
                 buildClient()
             }
-            "topic_name" -> {
-                topic = prefs.getString("topic_name", "") ?: ""
+            "mic_topic_name" -> {
+                micTopic = prefs.getString("mic_topic_name", "") ?: ""
                 mqttClient
             }
+            "din_topic_name" -> {
+                dynTopic = prefs.getString("dyn_topic_name", "") ?: ""
+                subToAudioinput()
+                mqttClient
+            }
+
             else -> mqttClient
         }
         connect()
@@ -100,7 +121,7 @@ class MQTTService @Inject constructor(
     private fun connect(){
         connectionStatus.postValue(context.getString(R.string.connection_status_connection))
         mqttClient.connect().whenComplete{
-            con, trowable ->
+            con, throwable ->
             val message = if(con.reasonCode == Mqtt5ConnAckReasonCode.SUCCESS)
                 R.string.connection_status_connected
             else
@@ -108,15 +129,37 @@ class MQTTService @Inject constructor(
             connectionStatus.postValue(
                 context.getString(message)
             )
-            Log.e("mqtt", "error", trowable)
+            throwable?.let {
+                Log.e("mqtt", it.message.toString())
+            }
+            if(con.reasonCode == Mqtt5ConnAckReasonCode.SUCCESS)
+                subToAudioinput()
         }
     }
 
+    /**
+     * Этот метод используется для подписки на аудиосообщения брокера.
+     */
+    private fun subToAudioinput(){
+        mqttClient.subscribeWith()
+            .topicFilter(dynTopic)
+            .qos(MqttQos.EXACTLY_ONCE)
+            .callback {
+                it.payload.ifPresent {
+                    dynamic.postValue(it.array())
+                }
+            }
+            .send()
+    }
+
+    /**
+     * Этот метод используется для построения MQTT клиента.
+     */
     private fun buildClient(): Mqtt5AsyncClient {
         val builder =  Mqtt5Client.builder()
             .serverHost(serverID)
             .serverPort(serverPort)
-            .identifier("mic-jarvis")
+            .identifier(UUID.randomUUID().toString())
         if(clientID.isNotBlank() and password.isNotBlank())
             builder
                 .simpleAuth()

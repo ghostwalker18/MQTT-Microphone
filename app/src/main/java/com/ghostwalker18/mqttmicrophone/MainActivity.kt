@@ -26,6 +26,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.content.res.AppCompatResources
 import com.ghostwalker18.mqttmicrophone.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -42,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var notStarted = true
     @Inject lateinit var recorder: VoiceRecorder
+    @Inject lateinit var player: VoicePlayer
     @Inject lateinit var mqttService: MQTTService
     @Inject lateinit var prefs: SharedPreferences
 
@@ -51,7 +53,6 @@ class MainActivity : AppCompatActivity() {
             finish()
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -65,6 +66,55 @@ class MainActivity : AppCompatActivity() {
         } else {
             audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
         }
+        setupRecordMode()
+        mqttService.connectionStatus.observe(this){
+            status -> binding.connectionStatus.text = status
+        }
+        player.startWorking(this)
+        player.isPlaying.observe(this) {
+            if(it){
+                binding.mic.icon = AppCompatResources.getDrawable(this, R.drawable.baseline_stop_96)
+                binding.mic.setOnClickListener {
+                    player.stopPlaying()
+                }
+                binding.speaking.text = getString(R.string.recieved_answer)
+                binding.speaking.visibility = View.VISIBLE
+            }
+            else{
+                binding.mic.icon = AppCompatResources.getDrawable(this, R.drawable.baseline_mic_96)
+                setupRecordMode()
+                binding.speaking.text = getString(R.string.speaking)
+                binding.speaking.visibility = View.GONE
+            }
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId){
+            R.id.action_settings -> {
+                startActivity(Intent(this, SettingsActivity::class.java))
+                true
+            }
+            else ->  super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        player.stopPlaying()
+        mqttService.shutDown()
+    }
+
+    /**
+     * Этот метод настраивает режим аудиозаписи.
+     */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun setupRecordMode(){
         when(prefs.getString("record_mode", "hold")){
             "hold" -> {
                 binding.mic.setOnTouchListener { _, motionEvent ->
@@ -92,24 +142,6 @@ class MainActivity : AppCompatActivity() {
                     notStarted = !notStarted
                 }
             }
-        }
-        mqttService.connectionStatus.observe(this){
-            status -> binding.connectionStatus.text = status
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        return super.onCreateOptionsMenu(menu)
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when(item.itemId){
-            R.id.action_settings -> {
-                startActivity(Intent(this, SettingsActivity::class.java))
-                true
-            }
-            else ->  super.onOptionsItemSelected(item)
         }
     }
 }

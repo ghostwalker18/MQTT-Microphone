@@ -19,12 +19,14 @@
     <string name="port_option">Connection port</string>
     <string name="username_option">Username</string>
     <string name="password_option">Password</string>
-    <string name="topic_name_option">Topic for sending a voice</string>
+    <string name="mic_topic_name_option">Topic for sending a record</string>
+    <string name="dyn_topic_name_option">Topic for receiving a record</string>
     <string name="app_settings">App</string>
     <string name="record_mode_option">Voice record mode</string>
     <string name="language_option">Language</string>
     <string name="theme_option">Theme</string>
     <string name="speaking">Speak</string>
+    <string name="recieved_answer">Полученный ответ</string>
     <string name="permission_for_audio_record">Audio recording permission is required</string>
     <string name="connection_status_not_connected">Not connected</string>
     <string name="connection_status_connection">Connection in progress</string>

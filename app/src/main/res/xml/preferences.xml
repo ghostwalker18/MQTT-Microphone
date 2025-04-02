@@ -38,8 +38,12 @@
             app:key="password"/>
 
         <EditTextPreference
-            app:title="@string/topic_name_option"
-            app:key="topic_name"/>
+            app:title="@string/mic_topic_name_option"
+            app:key="mic_topic_name"/>
+
+        <EditTextPreference
+            app:title="@string/dyn_topic_name_option"
+            app:key="dyn_topic_name"/>
     </PreferenceCategory>
 
     <PreferenceCategory
