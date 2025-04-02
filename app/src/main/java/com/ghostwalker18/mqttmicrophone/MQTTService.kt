@@ -16,10 +16,12 @@ package com.ghostwalker18.mqttmicrophone
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.hivemq.client.mqtt.datatypes.MqttQos
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient
 import com.hivemq.client.mqtt.mqtt5.Mqtt5Client
+import com.hivemq.client.mqtt.mqtt5.message.connect.connack.Mqtt5ConnAckReasonCode
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
@@ -97,17 +99,30 @@ class MQTTService @Inject constructor(
      */
     private fun connect(){
         connectionStatus.postValue(context.getString(R.string.connection_status_connection))
-        mqttClient.connect().thenAccept {  }
+        mqttClient.connect().whenComplete{
+            con, trowable ->
+            val message = if(con.reasonCode == Mqtt5ConnAckReasonCode.SUCCESS)
+                R.string.connection_status_connected
+            else
+                R.string.connection_status_not_connected
+            connectionStatus.postValue(
+                context.getString(message)
+            )
+            Log.e("mqtt", "error", trowable)
+        }
     }
 
-    private fun buildClient(): Mqtt5AsyncClient{
-        return Mqtt5Client.builder()
+    private fun buildClient(): Mqtt5AsyncClient {
+        val builder =  Mqtt5Client.builder()
             .serverHost(serverID)
             .serverPort(serverPort)
-            .simpleAuth()
-            .username(clientID)
-            .password(password.toByteArray())
-            .applySimpleAuth()
-            .buildAsync()
+            .identifier("mic-jarvis")
+        if(clientID.isNotBlank() and password.isNotBlank())
+            builder
+                .simpleAuth()
+                .username(clientID)
+                .password(password.toByteArray())
+                .applySimpleAuth()
+        return builder.buildAsync()
     }
 }
