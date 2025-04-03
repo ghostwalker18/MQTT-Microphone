@@ -15,6 +15,7 @@
 package com.ghostwalker18.mqttmicrophone
 
 import android.content.Context
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.MutableLiveData
@@ -36,10 +37,16 @@ class VoicePlayer @Inject constructor(
     @ApplicationContext val context: Context
 ) {
     private val fileName = context.cacheDir.absolutePath + "/received_audio.3gp"
+    private val inputFile = File(fileName)
     private val player: MediaPlayer = MediaPlayer()
     val isPlaying = MutableLiveData(false)
 
     init {
+        player.setAudioAttributes(
+            AudioAttributes.Builder()
+                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                .build()
+        )
         player.setOnCompletionListener {
             isPlaying.postValue(false)
         }
@@ -50,22 +57,31 @@ class VoicePlayer @Inject constructor(
      */
     fun startWorking(owner: LifecycleOwner){
         service.dynamic.observe(owner) {
-            val file = File(fileName)
-            if(file.exists()) file.delete()
-            file.writeBytes(it)
+            if (inputFile.exists()) inputFile.delete()
+            inputFile.writeBytes(it)
+            player.reset()
             player.setDataSource(fileName)
+            player.prepare()
             isPlaying.postValue(true)
             player.start()
         }
     }
 
     /**
-     * Этот метод используется для остановеи воспроизведения.
+     * Этот метод используется для остановки воспроизведения.
      */
     fun stopPlaying(){
         isPlaying.postValue(false)
         player.stop()
         val file = File(fileName)
-        if (file.exists()) file.delete()
+        if (inputFile.exists()) file.delete()
+    }
+
+    /**
+     * Этот метод используется для освобождения ресурсов.
+     */
+    fun shutDown(){
+        player.release()
+        if (inputFile.exists()) inputFile.delete()
     }
 }

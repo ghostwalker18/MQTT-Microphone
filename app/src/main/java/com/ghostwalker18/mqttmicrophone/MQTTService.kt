@@ -146,7 +146,9 @@ class MQTTService @Inject constructor(
             .qos(MqttQos.EXACTLY_ONCE)
             .callback {
                 it.payload.ifPresent {
-                    dynamic.postValue(it.array())
+                    val array = ByteArray(it.capacity())
+                    it.get(array)
+                    dynamic.postValue(array)
                 }
             }
             .send()

@@ -104,10 +104,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun onStop() {
         player.stopPlaying()
+        player.shutDown()
         mqttService.shutDown()
+        super.onStop()
     }
 
     /**
