@@ -72,7 +72,8 @@ class VoicePlayer @Inject constructor(
      */
     fun stopPlaying(){
         isPlaying.postValue(false)
-        player.stop()
+        if (player.isPlaying)
+            player.stop()
         val file = File(fileName)
         if (inputFile.exists()) file.delete()
     }

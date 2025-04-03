@@ -105,9 +105,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        player.stopPlaying()
-        player.shutDown()
-        mqttService.shutDown()
+        try {
+            player.stopPlaying()
+            player.shutDown()
+            mqttService.shutDown()
+        } catch (_: Exception){/*Not required*/}
         super.onStop()
     }
 
